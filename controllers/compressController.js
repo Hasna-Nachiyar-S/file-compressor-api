@@ -4,6 +4,8 @@ const compressImage = require("../services/imageService");
 
 const compressDocument = require("../services/documentService");
 
+const downloadFile = require("../services/downloadFileService");
+
 exports.compressImage = async (req, res) => {
   try {
     if (!req.file) {
@@ -21,7 +23,7 @@ exports.compressImage = async (req, res) => {
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-    res.status(200).json({
+    res.json({
       success: true,
       type: "image",
       originalFile: req.file.originalname,
@@ -56,10 +58,53 @@ exports.compressDocument = async (req, res) => {
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-    res.status(200).json({
+    res.json({
       success: true,
       type: "document",
       originalFile: req.file.originalname,
+      originalSize: result.originalSize,
+      compressedSize: result.compressedSize,
+      downloadUrl: `${baseUrl}/${result.outputPath}`,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.compressFromUrl = async (req, res) => {
+  try {
+    const { fileUrl, mimeType } = req.body;
+
+    if (!fileUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "fileUrl required",
+      });
+    }
+
+    const localFile = `uploads/${Date.now()}`;
+
+    await downloadFile(fileUrl, localFile);
+
+    let result;
+
+    if (mimeType && mimeType.startsWith("image/")) {
+      result = await compressImage(localFile);
+    } else {
+      result = await compressDocument(localFile);
+    }
+
+    fs.unlinkSync(localFile);
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    res.json({
+      success: true,
       originalSize: result.originalSize,
       compressedSize: result.compressedSize,
       downloadUrl: `${baseUrl}/${result.outputPath}`,

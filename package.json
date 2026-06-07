@@ -20,6 +20,7 @@
   "homepage": "https://github.com/Hasna-Nachiyar-S/file-compressor-api#readme",
   "dependencies": {
     "adm-zip": "^0.5.17",
+    "axios": "^1.16.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "fs-extra": "^11.3.5",
