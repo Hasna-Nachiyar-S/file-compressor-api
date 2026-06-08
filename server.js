@@ -2,8 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 
-const compressRoutes =
-  require("./routes/compressRoutes");
+const compressRoutes = require("./routes/compressRoutes");
 
 const app = express();
 
@@ -17,31 +16,22 @@ if (!fs.existsSync("compressed")) {
 
 app.use(cors());
 
-app.use(express.json({
-  limit: "50mb"
-}));
-
 app.use(
-  "/compressed",
-  express.static("compressed")
+  express.json({
+    limit: "50mb",
+  }),
 );
 
-app.use(
-  "/compress",
-  compressRoutes
-);
+app.use("/compressed", express.static("compressed"));
 
-app.get("/version", (req, res) => {
-  res.json({
-    version: "from-url-route-v1"
-  });
+app.use("/compress", compressRoutes);
+
+app.get("/", (req, res) => {
+  res.send("File Compressor API Running");
 });
 
-const PORT =
-  process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(
-    `Server running on ${PORT}`
-  );
+  console.log(`Server running on ${PORT}`);
 });
