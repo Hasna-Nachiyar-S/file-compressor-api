@@ -31,10 +31,10 @@ app.use(
   compressRoutes
 );
 
-app.get("/", (req, res) => {
-  res.send(
-    "File Compressor API Running"
-  );
+app.get("/version", (req, res) => {
+  res.json({
+    version: "from-url-route-v1"
+  });
 });
 
 const PORT =
