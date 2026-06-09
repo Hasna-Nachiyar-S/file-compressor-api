@@ -30,7 +30,7 @@ exports.compressFromUrl = async (req, res) => {
 
     let result;
 
-    if (mimeType?.startsWith("image/")) {
+    if (mimeType && mimeType.startsWith("image/")) {
       result = await compressImage(localFile, compressionLevel);
     } else {
       result = await compressDocument(localFile);
@@ -49,7 +49,7 @@ exports.compressFromUrl = async (req, res) => {
       downloadUrl: `${baseUrl}/${result.outputPath}`,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Compression Error:", error);
 
     return res.status(500).json({
       success: false,

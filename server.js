@@ -1,4 +1,5 @@
 console.log("SERVER.JS LOADED");
+
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -24,17 +25,9 @@ app.use(
 );
 
 app.use("/compressed", express.static("compressed"));
-app.use((req, res, next) => {
-  console.log(req.method, req.url);
-  next();
-});
+
 app.use("/compress", compressRoutes);
-app.post("/test", (req, res) => {
-  res.json({
-    success: true,
-    message: "test route works",
-  });
-});
+
 app.get("/", (req, res) => {
   res.send("File Compressor API Running");
 });
