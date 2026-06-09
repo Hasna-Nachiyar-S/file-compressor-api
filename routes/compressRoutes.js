@@ -12,6 +12,9 @@ router.post("/image", upload.single("file"), controller.compressImage);
 
 router.post("/document", upload.single("file"), controller.compressDocument);
 
-router.post("/from-url", controller.compressFromUrl);
+router.post("/from-url", (req, res, next) => {
+    console.log("FROM URL ROUTE HIT");
+    next();
+}, controller.compressFromUrl);
 
 module.exports = router;
