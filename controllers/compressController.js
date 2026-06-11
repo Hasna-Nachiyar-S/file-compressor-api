@@ -40,13 +40,15 @@ exports.compressFromUrl = async (req, res) => {
       fs.unlinkSync(localFile);
     }
 
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const downloadUrl = `https://${req.get("host")}/${result.outputPath}`;
+
+    console.log("DOWNLOAD URL:", downloadUrl);
 
     return res.json({
       success: true,
       originalSize: result.originalSize,
       compressedSize: result.compressedSize,
-      downloadUrl: `${baseUrl}/${result.outputPath}`,
+      downloadUrl,
     });
   } catch (error) {
     console.error("Compression Error:", error);
