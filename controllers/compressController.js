@@ -42,7 +42,11 @@ exports.compressFromUrl = async (req, res) => {
 
     const downloadUrl = `https://${req.get("host")}/${result.outputPath}`;
 
+    console.log("================================");
+    console.log("HOST:", req.get("host"));
+    console.log("OUTPUT PATH:", result.outputPath);
     console.log("DOWNLOAD URL:", downloadUrl);
+    console.log("================================");
 
     return res.json({
       success: true,
