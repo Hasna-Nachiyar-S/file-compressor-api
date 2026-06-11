@@ -7,7 +7,7 @@ const fs = require("fs");
 const compressRoutes = require("./routes/compressRoutes");
 
 const app = express();
-
+app.set("trust proxy", 1);
 if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
