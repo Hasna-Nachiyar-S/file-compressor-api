@@ -2,36 +2,31 @@ const sharp = require("sharp");
 const fs = require("fs");
 
 function getQuality(level) {
-  switch (level) {
-    case "low":
-      return 90;
-    case "medium":
-      return 70;
-    case "high":
-      return 40;
-    default:
-      return 70;
-  }
+  if (level === "low") return 95;
+  if (level === "medium") return 70;
+  return 40;
 }
 
 async function compressImage(inputPath, compressionLevel) {
-  console.log("compressImage called with:", compressionLevel);
+  console.log("LEVEL:", compressionLevel);
 
   const quality = getQuality(compressionLevel);
 
-  const outputPath = "compressed/" + Date.now() + ".webp";
+  const outputPath = "compressed/" + Date.now() + ".jpg";
 
   const originalSize = fs.statSync(inputPath).size;
 
   await sharp(inputPath)
-    .rotate() // 🔥 IMPORTANT: forces proper processing
-    .toFormat("webp", { quality }) // 🔥 more reliable than .webp()
+    .rotate()
+    .resize({ width: 1200 }) // 🔥 IMPORTANT: forces real size change
+    .jpeg({ quality, mozjpeg: true })
     .toFile(outputPath);
 
   const compressedSize = fs.statSync(outputPath).size;
 
-  console.log("Quality used:", quality);
-  console.log("Original:", originalSize, "Compressed:", compressedSize);
+  console.log("QUALITY:", quality);
+  console.log("ORIGINAL:", originalSize);
+  console.log("COMPRESSED:", compressedSize);
 
   return {
     outputPath,
