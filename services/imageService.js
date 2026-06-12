@@ -19,6 +19,7 @@ async function compressImage(inputPath, compressionLevel) {
   const outputPath = `compressed/${fileName}.jpg`;
 
   const originalSize = fs.statSync(inputPath).size;
+  console.log("INPUT SIZE:", fs.statSync(inputPath).size);
 
   await sharp(inputPath)
     .rotate()
@@ -31,7 +32,7 @@ async function compressImage(inputPath, compressionLevel) {
       mozjpeg: true,
     })
     .toFile(outputPath);
-
+  console.log("OUTPUT SIZE:", fs.statSync(outputPath).size);
   const compressedSize = fs.statSync(outputPath).size;
 
   console.log("QUALITY:", quality);
