@@ -29,7 +29,11 @@ exports.compressFromUrl = async (req, res) => {
     let result;
 
     if (mimeType && mimeType.startsWith("image/")) {
+      console.log("ABOUT TO CALL IMAGE SERVICE");
+
       result = await compressImage(localFile, compressionLevel);
+
+      console.log("IMAGE SERVICE RETURNED");
     } else {
       result = await compressDocument(localFile);
     }
