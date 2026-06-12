@@ -1,6 +1,5 @@
 const sharp = require("sharp");
 const fs = require("fs");
-const crypto = require("crypto");
 
 function getQuality(level) {
   if (level === "low") return 95;
@@ -9,35 +8,18 @@ function getQuality(level) {
 }
 
 async function compressImage(inputPath, compressionLevel) {
+  console.log("🔥 IMAGE SERVICE HIT 🔥");
   console.log("LEVEL:", compressionLevel);
 
   const quality = getQuality(compressionLevel);
 
-  // 🔥 guaranteed unique filename
-  const fileName = crypto.randomBytes(8).toString("hex");
-
-  const outputPath = `compressed/${fileName}.jpg`;
+  const outputPath = "compressed/" + Date.now() + ".jpg";
 
   const originalSize = fs.statSync(inputPath).size;
-  console.log("INPUT SIZE:", fs.statSync(inputPath).size);
 
-  await sharp(inputPath)
-    .rotate()
-    .resize({
-      width: 1000, // 🔥 forces real compression difference
-      withoutEnlargement: true,
-    })
-    .jpeg({
-      quality,
-      mozjpeg: true,
-    })
-    .toFile(outputPath);
-  console.log("OUTPUT SIZE:", fs.statSync(outputPath).size);
+  await sharp(inputPath).resize(1000).jpeg({ quality }).toFile(outputPath);
+
   const compressedSize = fs.statSync(outputPath).size;
-
-  console.log("QUALITY:", quality);
-  console.log("ORIGINAL:", originalSize);
-  console.log("COMPRESSED:", compressedSize);
 
   return {
     outputPath,
@@ -46,4 +28,5 @@ async function compressImage(inputPath, compressionLevel) {
   };
 }
 
+// 🔥 IMPORTANT: explicit export
 module.exports = compressImage;
