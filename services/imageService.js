@@ -1,5 +1,6 @@
 const sharp = require("sharp");
 const fs = require("fs");
+const crypto = require("crypto");
 
 function getQuality(level) {
   if (level === "low") return 95;
@@ -12,14 +13,23 @@ async function compressImage(inputPath, compressionLevel) {
 
   const quality = getQuality(compressionLevel);
 
-  const outputPath = "compressed/" + Date.now() + ".jpg";
+  // 🔥 guaranteed unique filename
+  const fileName = crypto.randomBytes(8).toString("hex");
+
+  const outputPath = `compressed/${fileName}.jpg`;
 
   const originalSize = fs.statSync(inputPath).size;
 
   await sharp(inputPath)
     .rotate()
-    .resize({ width: 1200 }) // 🔥 IMPORTANT: forces real size change
-    .jpeg({ quality, mozjpeg: true })
+    .resize({
+      width: 1000, // 🔥 forces real compression difference
+      withoutEnlargement: true,
+    })
+    .jpeg({
+      quality,
+      mozjpeg: true,
+    })
     .toFile(outputPath);
 
   const compressedSize = fs.statSync(outputPath).size;
