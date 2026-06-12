@@ -1,34 +1,34 @@
 const sharp = require("sharp");
 const fs = require("fs");
 
-async function compressImage(
-  inputPath,
-  compressionLevel = "mediumcompression",
-) {
-  let quality = 70;
-
-  switch (compressionLevel) {
-    case "lowcompression":
-      quality = 90;
-      break;
-
-    case "mediumcompression":
-      quality = 70;
-      break;
-
-    case "highcompression":
-      quality = 40;
-      break;
+function getQuality(level) {
+  switch (level) {
+    case "low":
+      return 90; // least compression
+    case "medium":
+      return 70;
+    case "high":
+      return 40; // strongest compression
+    default:
+      return 70;
   }
+}
+
+async function compressImage(inputPath, compressionLevel) {
+  const quality = getQuality(compressionLevel);
 
   const outputPath = "compressed/" + Date.now() + ".webp";
 
+  const originalSize = fs.statSync(inputPath).size;
+
   await sharp(inputPath).webp({ quality }).toFile(outputPath);
+
+  const compressedSize = fs.statSync(outputPath).size;
 
   return {
     outputPath,
-    originalSize: fs.statSync(inputPath).size,
-    compressedSize: fs.statSync(outputPath).size,
+    originalSize,
+    compressedSize,
   };
 }
 

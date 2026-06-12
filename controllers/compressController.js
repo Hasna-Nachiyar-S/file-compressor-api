@@ -11,6 +11,8 @@ exports.compressFromUrl = async (req, res) => {
 
     const { fileUrl, mimeType, compressionLevel } = req.body;
 
+    console.log("Compression Level Received:", compressionLevel);
+
     if (!fileUrl) {
       return res.status(400).json({
         success: false,
@@ -22,11 +24,7 @@ exports.compressFromUrl = async (req, res) => {
 
     const localFile = path.join("uploads", `${Date.now()}.${extension}`);
 
-    console.log("Downloading:", fileUrl);
-
     await downloadFile(fileUrl, localFile);
-
-    console.log("Download complete");
 
     let result;
 
@@ -41,12 +39,6 @@ exports.compressFromUrl = async (req, res) => {
     }
 
     const downloadUrl = `https://${req.get("host")}/${result.outputPath}`;
-
-    console.log("================================");
-    console.log("HOST:", req.get("host"));
-    console.log("OUTPUT PATH:", result.outputPath);
-    console.log("DOWNLOAD URL:", downloadUrl);
-    console.log("================================");
 
     return res.json({
       success: true,
