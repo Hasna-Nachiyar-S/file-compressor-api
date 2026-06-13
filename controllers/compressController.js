@@ -1,6 +1,3 @@
-console.log("=== NEW CONTROLLER VERSION ===");
-console.log(req.body);
-
 const fs = require("fs");
 const path = require("path");
 
@@ -10,22 +7,21 @@ const downloadFile = require("../services/downloadFileService");
 
 exports.compressFromUrl = async (req, res) => {
   try {
-    const { fileUrl, fileName, compressionLevel } = req.body;
-
+    console.log("NEW DEPLOYMENT ACTIVE");
     console.log("BODY:", req.body);
 
-    if (!fileUrl) {
+    const { fileUrl, fileName, compressionLevel } = req.body;
+
+    if (!fileUrl || !fileName) {
       return res.status(400).json({
         success: false,
-        message: "fileUrl required",
+        message: "fileUrl and fileName required",
       });
     }
 
-    const extension = fileName?.split(".").pop()?.toLowerCase() || "tmp";
+    const extension = fileName.split(".").pop().toLowerCase();
 
-    const localFile = path.join("uploads", `${Date.now()}.${extension}`);
-
-    await downloadFile(fileUrl, localFile);
+    console.log("EXTENSION:", extension);
 
     const imageExtensions = [
       "jpg",
@@ -37,39 +33,40 @@ exports.compressFromUrl = async (req, res) => {
       "tiff",
     ];
 
+    const localFile = path.join("uploads", `${Date.now()}.${extension}`);
+
+    await downloadFile(fileUrl, localFile);
+
     let result;
 
     if (imageExtensions.includes(extension)) {
-      console.log("IMAGE DETECTED");
-      console.log("LEVEL:", compressionLevel);
+      console.log("IMAGE PATH TRIGGERED");
 
       result = await compressImage(localFile, compressionLevel);
     } else {
-      console.log("DOCUMENT DETECTED");
+      console.log("DOCUMENT PATH TRIGGERED");
 
-      result = await compressDocument(localFile, compressionLevel);
+      result = await compressDocument(localFile);
     }
 
     if (fs.existsSync(localFile)) {
       fs.unlinkSync(localFile);
     }
 
-    const protocol = req.headers["x-forwarded-proto"] || "https";
+    const downloadUrl = `https://${req.get("host")}/${result.outputPath}`;
 
-    const downloadUrl = `${protocol}://${req.get("host")}/${result.outputPath}`;
-
-    res.json({
+    return res.json({
       success: true,
       originalSize: result.originalSize,
       compressedSize: result.compressedSize,
       downloadUrl,
     });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: err.message,
     });
   }
 };
