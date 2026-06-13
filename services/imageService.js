@@ -1,25 +1,61 @@
 const sharp = require("sharp");
 const fs = require("fs");
 
-function getQuality(level) {
-  if (level === "low") return 95;
-  if (level === "medium") return 70;
-  return 40;
+function getCompressionSettings(level) {
+  switch (level) {
+    case "low":
+      return {
+        width: 1800,
+        quality: 90,
+      };
+
+    case "medium":
+      return {
+        width: 1200,
+        quality: 70,
+      };
+
+    case "high":
+      return {
+        width: 800,
+        quality: 40,
+      };
+
+    default:
+      return {
+        width: 1200,
+        quality: 70,
+      };
+  }
 }
 
-async function compressImage(inputPath, compressionLevel) {
-  console.log("🔥 IMAGE SERVICE HIT 🔥");
+async function compressImage(inputPath, compressionLevel = "medium") {
+  console.log("IMAGE SERVICE HIT");
   console.log("LEVEL:", compressionLevel);
 
-  const quality = getQuality(compressionLevel);
+  const settings = getCompressionSettings(compressionLevel);
 
   const outputPath = "compressed/" + Date.now() + ".jpg";
 
   const originalSize = fs.statSync(inputPath).size;
 
-  await sharp(inputPath).resize(1000).jpeg({ quality }).toFile(outputPath);
+  await sharp(inputPath)
+    .resize({
+      width: settings.width,
+      withoutEnlargement: true,
+    })
+    .jpeg({
+      quality: settings.quality,
+      mozjpeg: true,
+    })
+    .toFile(outputPath);
 
   const compressedSize = fs.statSync(outputPath).size;
+
+  console.log("Original Size:", originalSize);
+  console.log("Compressed Size:", compressedSize);
+  console.log("Width:", settings.width);
+  console.log("Quality:", settings.quality);
 
   return {
     outputPath,
@@ -28,5 +64,4 @@ async function compressImage(inputPath, compressionLevel) {
   };
 }
 
-// 🔥 IMPORTANT: explicit export
 module.exports = compressImage;

@@ -1,7 +1,7 @@
 const AdmZip = require("adm-zip");
 const fs = require("fs");
 
-async function compressDocument(inputPath) {
+async function compressDocument(inputPath, compressionLevel = "medium") {
   const zip = new AdmZip();
 
   zip.addLocalFile(inputPath);

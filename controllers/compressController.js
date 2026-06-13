@@ -29,20 +29,18 @@ exports.compressFromUrl = async (req, res) => {
     let result;
 
     if (mimeType && mimeType.startsWith("image/")) {
-      console.log("ABOUT TO CALL IMAGE SERVICE");
-
       result = await compressImage(localFile, compressionLevel);
-
-      console.log("IMAGE SERVICE RETURNED");
     } else {
-      result = await compressDocument(localFile);
+      result = await compressDocument(localFile, compressionLevel);
     }
 
     if (fs.existsSync(localFile)) {
       fs.unlinkSync(localFile);
     }
 
-    const downloadUrl = `https://${req.get("host")}/${result.outputPath}`;
+    const protocol = req.headers["x-forwarded-proto"] || "https";
+
+    const downloadUrl = `${protocol}://${req.get("host")}/${result.outputPath}`;
 
     return res.json({
       success: true,
