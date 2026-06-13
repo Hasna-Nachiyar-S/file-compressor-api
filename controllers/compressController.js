@@ -1,3 +1,6 @@
+console.log("=== NEW CONTROLLER VERSION ===");
+console.log(req.body);
+
 const fs = require("fs");
 const path = require("path");
 
