@@ -7,11 +7,9 @@ const downloadFile = require("../services/downloadFileService");
 
 exports.compressFromUrl = async (req, res) => {
   try {
-    console.log("Request:", req.body);
+    const { fileUrl, fileName, compressionLevel } = req.body;
 
-    const { fileUrl, mimeType, compressionLevel } = req.body;
-
-    console.log("Compression Level Received:", compressionLevel);
+    console.log("BODY:", req.body);
 
     if (!fileUrl) {
       return res.status(400).json({
@@ -20,17 +18,32 @@ exports.compressFromUrl = async (req, res) => {
       });
     }
 
-    const extension = mimeType?.split("/")[1] || "tmp";
+    const extension = fileName?.split(".").pop()?.toLowerCase() || "tmp";
 
     const localFile = path.join("uploads", `${Date.now()}.${extension}`);
 
     await downloadFile(fileUrl, localFile);
 
+    const imageExtensions = [
+      "jpg",
+      "jpeg",
+      "png",
+      "webp",
+      "gif",
+      "bmp",
+      "tiff",
+    ];
+
     let result;
 
-    if (mimeType && mimeType.startsWith("image/")) {
+    if (imageExtensions.includes(extension)) {
+      console.log("IMAGE DETECTED");
+      console.log("LEVEL:", compressionLevel);
+
       result = await compressImage(localFile, compressionLevel);
     } else {
+      console.log("DOCUMENT DETECTED");
+
       result = await compressDocument(localFile, compressionLevel);
     }
 
@@ -42,16 +55,16 @@ exports.compressFromUrl = async (req, res) => {
 
     const downloadUrl = `${protocol}://${req.get("host")}/${result.outputPath}`;
 
-    return res.json({
+    res.json({
       success: true,
       originalSize: result.originalSize,
       compressedSize: result.compressedSize,
       downloadUrl,
     });
   } catch (error) {
-    console.error("Compression Error:", error);
+    console.error(error);
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: error.message,
     });

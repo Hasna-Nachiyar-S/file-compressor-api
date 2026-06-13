@@ -30,14 +30,13 @@ function getCompressionSettings(level) {
 }
 
 async function compressImage(inputPath, compressionLevel = "medium") {
-  console.log("IMAGE SERVICE HIT");
-  console.log("LEVEL:", compressionLevel);
-
   const settings = getCompressionSettings(compressionLevel);
 
-  const outputPath = "compressed/" + Date.now() + ".jpg";
+  const outputPath = `compressed/${Date.now()}.jpg`;
 
   const originalSize = fs.statSync(inputPath).size;
+
+  console.log("Compressing:", compressionLevel, settings);
 
   await sharp(inputPath)
     .resize({
@@ -52,10 +51,7 @@ async function compressImage(inputPath, compressionLevel = "medium") {
 
   const compressedSize = fs.statSync(outputPath).size;
 
-  console.log("Original Size:", originalSize);
-  console.log("Compressed Size:", compressedSize);
-  console.log("Width:", settings.width);
-  console.log("Quality:", settings.quality);
+  console.log("Original:", originalSize, "Compressed:", compressedSize);
 
   return {
     outputPath,
