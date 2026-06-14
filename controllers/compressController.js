@@ -5,6 +5,13 @@ const compressImage = require("../services/imageService");
 const compressDocument = require("../services/documentService");
 const downloadFile = require("../services/downloadFileService");
 
+function normalizeCompressionLevel(value) {
+  const num = Number(value);
+
+  if (isNaN(num)) return 50;
+  return Math.max(1, Math.min(100, num));
+}
+
 exports.compressFromUrl = async (req, res) => {
   try {
     console.log("NEW DEPLOYMENT ACTIVE");
@@ -19,9 +26,12 @@ exports.compressFromUrl = async (req, res) => {
       });
     }
 
+    const normalizedLevel = normalizeCompressionLevel(compressionLevel);
+
     const extension = fileName.split(".").pop().toLowerCase();
 
     console.log("EXTENSION:", extension);
+    console.log("COMPRESSION LEVEL:", normalizedLevel);
 
     const imageExtensions = [
       "jpg",
@@ -42,11 +52,11 @@ exports.compressFromUrl = async (req, res) => {
     if (imageExtensions.includes(extension)) {
       console.log("IMAGE PATH TRIGGERED");
 
-      result = await compressImage(localFile, compressionLevel);
+      result = await compressImage(localFile, normalizedLevel);
     } else {
       console.log("DOCUMENT PATH TRIGGERED");
 
-      result = await compressDocument(localFile);
+      result = await compressDocument(localFile, normalizedLevel);
     }
 
     if (fs.existsSync(localFile)) {
@@ -60,6 +70,7 @@ exports.compressFromUrl = async (req, res) => {
       originalSize: result.originalSize,
       compressedSize: result.compressedSize,
       downloadUrl,
+      compressionLevel: normalizedLevel,
     });
   } catch (err) {
     console.error(err);

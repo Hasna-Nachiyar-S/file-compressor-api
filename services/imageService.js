@@ -1,31 +1,43 @@
 const sharp = require("sharp");
 const fs = require("fs");
 
-function settings(level) {
-  switch (level) {
-    case "low":
-      return { width: 1800, quality: 90 };
-    case "medium":
-      return { width: 1200, quality: 70 };
-    case "high":
-      return { width: 800, quality: 40 };
-    default:
-      return { width: 1200, quality: 70 };
-  }
+function settings(compressionPercentage = 50) {
+  const percentage = Math.max(
+    1,
+    Math.min(100, Number(compressionPercentage) || 50),
+  );
+
+  /*
+    USER LOGIC (consistent now):
+    1%   = best quality (least compression)
+    100% = strongest compression
+  */
+
+  const quality = Math.round(95 - ((percentage - 1) * (95 - 20)) / 99);
+
+  const width = Math.round(2000 - ((percentage - 1) * (2000 - 600)) / 99);
+
+  return { width, quality };
 }
 
-async function compressImage(inputPath, level = "medium") {
-  const s = settings(level);
+async function compressImage(inputPath, compressionPercentage = 50) {
+  const s = settings(compressionPercentage);
 
   const outputPath = `compressed/${Date.now()}.jpg`;
 
   const originalSize = fs.statSync(inputPath).size;
 
-  console.log("COMPRESS LEVEL:", level, s);
+  console.log("COMPRESSION:", compressionPercentage + "%", s);
 
   await sharp(inputPath)
-    .resize({ width: s.width, withoutEnlargement: true })
-    .jpeg({ quality: s.quality })
+    .resize({
+      width: s.width,
+      withoutEnlargement: true,
+    })
+    .jpeg({
+      quality: s.quality,
+      mozjpeg: true,
+    })
     .toFile(outputPath);
 
   const compressedSize = fs.statSync(outputPath).size;
@@ -36,6 +48,13 @@ async function compressImage(inputPath, level = "medium") {
     outputPath,
     originalSize,
     compressedSize,
+    compressionPercentage,
+    quality: s.quality,
+    width: s.width,
+    reductionPercent: (
+      ((originalSize - compressedSize) / originalSize) *
+      100
+    ).toFixed(2),
   };
 }
 
