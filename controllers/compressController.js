@@ -9,12 +9,12 @@ function normalizeCompressionLevel(value) {
   const num = Number(value);
 
   if (isNaN(num)) return 50;
+
   return Math.max(1, Math.min(100, num));
 }
 
 exports.compressFromUrl = async (req, res) => {
   try {
-    console.log("NEW DEPLOYMENT ACTIVE");
     console.log("BODY:", req.body);
 
     const { fileUrl, fileName, compressionLevel } = req.body;
@@ -29,9 +29,6 @@ exports.compressFromUrl = async (req, res) => {
     const normalizedLevel = normalizeCompressionLevel(compressionLevel);
 
     const extension = fileName.split(".").pop().toLowerCase();
-
-    console.log("EXTENSION:", extension);
-    console.log("COMPRESSION LEVEL:", normalizedLevel);
 
     const imageExtensions = [
       "jpg",
@@ -50,12 +47,8 @@ exports.compressFromUrl = async (req, res) => {
     let result;
 
     if (imageExtensions.includes(extension)) {
-      console.log("IMAGE PATH TRIGGERED");
-
       result = await compressImage(localFile, normalizedLevel);
     } else {
-      console.log("DOCUMENT PATH TRIGGERED");
-
       result = await compressDocument(localFile, normalizedLevel);
     }
 
@@ -63,20 +56,16 @@ exports.compressFromUrl = async (req, res) => {
       fs.unlinkSync(localFile);
     }
 
-    const downloadUrl = `https://${req.get("host")}/${result.outputPath}`;
+    const downloadUrl = `https://file-compressor-api-kgy8.onrender.com/${result.outputPath}`;
 
     return res.json({
       success: true,
-
       originalSize: result.originalSize,
       compressedSize: result.compressedSize,
-
       quality: result.quality,
       width: result.width,
-
       compressionLevel: normalizedLevel,
       reductionPercent: result.reductionPercent,
-
       downloadUrl,
     });
   } catch (err) {
