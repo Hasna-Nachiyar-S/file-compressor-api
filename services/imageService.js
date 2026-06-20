@@ -12,7 +12,7 @@ function settings(compressionPercentage = 50) {
 
   const quality = Math.round(95 - ((percentage - 1) * (95 - 20)) / 99);
 
-  const width = Math.round(2000 - ((percentage - 1) * (2000 - 600)) / 99);
+  const width = Math.round(1200 - ((percentage - 1) * (1200 - 250)) / 99);
 
   return {
     percentage,
