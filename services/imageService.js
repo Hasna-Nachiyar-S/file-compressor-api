@@ -10,7 +10,7 @@ function settings(compressionPercentage = 50) {
   // 1 = best quality
   // 100 = strongest compression
 
-  const quality = Math.round(95 - ((percentage - 1) * (95 - 20)) / 99);
+  const quality = Math.round(100 - ((percentage - 1) * 50) / 99);
 
   const width = Math.round(1200 - ((percentage - 1) * (1200 - 250)) / 99);
 
