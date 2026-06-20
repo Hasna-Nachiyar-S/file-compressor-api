@@ -67,10 +67,17 @@ exports.compressFromUrl = async (req, res) => {
 
     return res.json({
       success: true,
+
       originalSize: result.originalSize,
       compressedSize: result.compressedSize,
-      downloadUrl,
+
+      quality: result.quality,
+      width: result.width,
+
       compressionLevel: normalizedLevel,
+      reductionPercent: result.reductionPercent,
+
+      downloadUrl,
     });
   } catch (err) {
     console.error(err);

@@ -7,17 +7,18 @@ function settings(compressionPercentage = 50) {
     Math.min(100, Number(compressionPercentage) || 50),
   );
 
-  /*
-    USER LOGIC (consistent now):
-    1%   = best quality (least compression)
-    100% = strongest compression
-  */
+  // 1 = best quality
+  // 100 = strongest compression
 
   const quality = Math.round(95 - ((percentage - 1) * (95 - 20)) / 99);
 
   const width = Math.round(2000 - ((percentage - 1) * (2000 - 600)) / 99);
 
-  return { width, quality };
+  return {
+    percentage,
+    quality,
+    width,
+  };
 }
 
 async function compressImage(inputPath, compressionPercentage = 50) {
@@ -27,7 +28,12 @@ async function compressImage(inputPath, compressionPercentage = 50) {
 
   const originalSize = fs.statSync(inputPath).size;
 
-  console.log("COMPRESSION:", compressionPercentage + "%", s);
+  console.log("=================================");
+  console.log("Compression:", compressionPercentage);
+  console.log("Quality:", s.quality);
+  console.log("Width:", s.width);
+  console.log("Original Size:", originalSize);
+  console.log("=================================");
 
   await sharp(inputPath)
     .resize({
@@ -42,19 +48,19 @@ async function compressImage(inputPath, compressionPercentage = 50) {
 
   const compressedSize = fs.statSync(outputPath).size;
 
-  console.log("SIZE:", originalSize, "→", compressedSize);
+  console.log("Compressed Size:", compressedSize);
 
   return {
     outputPath,
     originalSize,
     compressedSize,
-    compressionPercentage,
     quality: s.quality,
     width: s.width,
-    reductionPercent: (
-      ((originalSize - compressedSize) / originalSize) *
-      100
-    ).toFixed(2),
+    compressionPercentage,
+    reductionPercent:
+      originalSize > 0
+        ? (((originalSize - compressedSize) / originalSize) * 100).toFixed(2)
+        : "0",
   };
 }
 
