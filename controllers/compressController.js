@@ -56,7 +56,9 @@ exports.compressFromUrl = async (req, res) => {
       fs.unlinkSync(localFile);
     }
 
-    const downloadUrl = `https://file-compressor-api-kgy8.onrender.com/${result.outputPath}`;
+    const fileNameForDownload = path.basename(result.outputPath);
+
+    const downloadUrl = `https://file-compressor-api-kgy8.onrender.com/download/${fileNameForDownload}`;
 
     return res.json({
       success: true,

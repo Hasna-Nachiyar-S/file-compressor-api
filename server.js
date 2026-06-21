@@ -3,6 +3,7 @@ console.log("SERVER.JS LOADED");
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
+const path = require("path");
 
 const compressRoutes = require("./routes/compressRoutes");
 
@@ -26,7 +27,36 @@ app.use(
   }),
 );
 
+/*
+  KEEP STATIC ACCESS OPTIONAL
+  Useful for testing files directly
+*/
 app.use("/compressed", express.static("compressed"));
+
+/*
+  FORCE DOWNLOAD ROUTE
+*/
+app.get("/download/:filename", (req, res) => {
+  try {
+    const filePath = path.join(__dirname, "compressed", req.params.filename);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: "File not found",
+      });
+    }
+
+    return res.download(filePath);
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Download failed",
+    });
+  }
+});
 
 app.use("/compress", compressRoutes);
 
