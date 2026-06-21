@@ -14,6 +14,15 @@ app.set("trust proxy", true);
 if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
+app.get("/download/:filename", (req, res) => {
+  console.log("DOWNLOAD ROUTE HIT:", req.params.filename);
+
+  const filePath = path.join(__dirname, "compressed", req.params.filename);
+
+  console.log("FILE PATH:", filePath);
+
+  res.download(filePath);
+});
 
 if (!fs.existsSync("compressed")) {
   fs.mkdirSync("compressed");
