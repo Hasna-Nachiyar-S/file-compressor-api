@@ -4,62 +4,45 @@ const path = require("path");
 
 console.log("IMAGE SERVICE BUILD 2026-06-22");
 
-function getSettings(level = 50) {
-  const percentage = Math.max(1, Math.min(100, Number(level) || 50));
+function getQuality(level = 50) {
+  level = Math.max(1, Math.min(100, Number(level) || 50));
 
-  // Gentler curve
-  const quality = Math.round(100 - percentage * 0.6);
-
-  return {
-    percentage,
-    quality,
-  };
+  return Math.round(95 - ((level - 1) * 55) / 99);
 }
 
 async function compressImage(inputPath, compressionLevel = 50) {
-  const settings = getSettings(compressionLevel);
+  const quality = getQuality(compressionLevel);
+
+  const metadata = await sharp(inputPath).metadata();
+
+  const originalSize = fs.statSync(inputPath).size;
 
   const ext = path.extname(inputPath).toLowerCase();
 
-  let outputExtension = ".jpg";
+  let outputExtension;
 
-  switch (ext) {
-    case ".png":
-      outputExtension = ".png";
-      break;
-
-    case ".webp":
-      outputExtension = ".webp";
-      break;
-
-    case ".jpeg":
-    case ".jpg":
-    default:
-      outputExtension = ".jpg";
-      break;
+  if (ext === ".png") {
+    outputExtension = ".webp";
+  } else if (ext === ".webp") {
+    outputExtension = ".webp";
+  } else {
+    outputExtension = ".jpg";
   }
 
   const outputPath = path.join("compressed", `${Date.now()}${outputExtension}`);
 
-  const originalSize = fs.statSync(inputPath).size;
-
-  const metadata = await sharp(inputPath).metadata();
-
   let targetWidth = metadata.width;
 
-  // Resize only very large images
   if (metadata.width > 2500) {
     targetWidth = 2500;
   }
 
   console.log("=================================");
   console.log("Compression Level:", compressionLevel);
-  console.log("Quality:", settings.quality);
-  console.log("Original Width:", metadata.width);
-  console.log("Original Height:", metadata.height);
-  console.log("Target Width:", targetWidth);
+  console.log("Quality:", quality);
   console.log("Original Size:", originalSize);
-  console.log("Input Format:", metadata.format);
+  console.log("Format:", metadata.format);
+  console.log("Target Width:", targetWidth);
   console.log("=================================");
 
   let pipeline = sharp(inputPath);
@@ -71,32 +54,20 @@ async function compressImage(inputPath, compressionLevel = 50) {
     });
   }
 
-  switch (outputExtension) {
-    case ".png":
-      await pipeline
-        .png({
-          compressionLevel: Math.round((compressionLevel / 100) * 9),
-          adaptiveFiltering: true,
-        })
-        .toFile(outputPath);
-      break;
-
-    case ".webp":
-      await pipeline
-        .webp({
-          quality: settings.quality,
-        })
-        .toFile(outputPath);
-      break;
-
-    default:
-      await pipeline
-        .jpeg({
-          quality: settings.quality,
-          mozjpeg: true,
-        })
-        .toFile(outputPath);
-      break;
+  if (outputExtension === ".webp") {
+    await pipeline
+      .webp({
+        quality,
+        effort: 6,
+      })
+      .toFile(outputPath);
+  } else {
+    await pipeline
+      .jpeg({
+        quality,
+        mozjpeg: true,
+      })
+      .toFile(outputPath);
   }
 
   const compressedSize = fs.statSync(outputPath).size;
@@ -106,18 +77,16 @@ async function compressImage(inputPath, compressionLevel = 50) {
       ? (((originalSize - compressedSize) / originalSize) * 100).toFixed(2)
       : "0.00";
 
-  console.log("Compressed Size:", compressedSize);
-  console.log("Reduction:", reductionPercent + "%");
+  console.log("Original:", originalSize);
+  console.log("Compressed:", compressedSize);
+  console.log("Reduction:", reductionPercent);
 
   return {
     outputPath,
     originalSize,
     compressedSize,
-    quality: settings.quality,
-    originalWidth: metadata.width,
-    originalHeight: metadata.height,
-    compressedWidth: targetWidth,
-    compressedHeight: metadata.height * (targetWidth / metadata.width),
+    quality,
+    width: targetWidth,
     reductionPercent,
   };
 }
