@@ -1,13 +1,14 @@
-console.log("IMAGE SERVICE BUILD 2026-06-22");
 const sharp = require("sharp");
 const fs = require("fs");
 const path = require("path");
 
+console.log("IMAGE SERVICE BUILD 2026-06-22");
+
 function getSettings(level = 50) {
   const percentage = Math.max(1, Math.min(100, Number(level) || 50));
 
-  // Wider quality range
-  const quality = Math.round(95 - ((percentage - 1) * 80) / 99);
+  // Gentler curve
+  const quality = Math.round(100 - percentage * 0.6);
 
   return {
     percentage,
@@ -18,7 +19,27 @@ function getSettings(level = 50) {
 async function compressImage(inputPath, compressionLevel = 50) {
   const settings = getSettings(compressionLevel);
 
-  const outputPath = path.join("compressed", `${Date.now()}.jpg`);
+  const ext = path.extname(inputPath).toLowerCase();
+
+  let outputExtension = ".jpg";
+
+  switch (ext) {
+    case ".png":
+      outputExtension = ".png";
+      break;
+
+    case ".webp":
+      outputExtension = ".webp";
+      break;
+
+    case ".jpeg":
+    case ".jpg":
+    default:
+      outputExtension = ".jpg";
+      break;
+  }
+
+  const outputPath = path.join("compressed", `${Date.now()}${outputExtension}`);
 
   const originalSize = fs.statSync(inputPath).size;
 
@@ -26,33 +47,57 @@ async function compressImage(inputPath, compressionLevel = 50) {
 
   let targetWidth = metadata.width;
 
-  // Resize only when image is large
-  if (metadata.width > 2000) {
-    targetWidth = 2000;
-  } else if (metadata.width > 1500) {
-    targetWidth = 1500;
+  // Resize only very large images
+  if (metadata.width > 2500) {
+    targetWidth = 2500;
   }
 
   console.log("=================================");
-  console.log("IMAGE SERVICE VERSION");
   console.log("Compression Level:", compressionLevel);
   console.log("Quality:", settings.quality);
   console.log("Original Width:", metadata.width);
   console.log("Original Height:", metadata.height);
   console.log("Target Width:", targetWidth);
   console.log("Original Size:", originalSize);
+  console.log("Input Format:", metadata.format);
   console.log("=================================");
 
-  await sharp(inputPath)
-    .resize({
+  let pipeline = sharp(inputPath);
+
+  if (targetWidth !== metadata.width) {
+    pipeline = pipeline.resize({
       width: targetWidth,
       withoutEnlargement: true,
-    })
-    .jpeg({
-      quality: settings.quality,
-      mozjpeg: true,
-    })
-    .toFile(outputPath);
+    });
+  }
+
+  switch (outputExtension) {
+    case ".png":
+      await pipeline
+        .png({
+          compressionLevel: Math.round((compressionLevel / 100) * 9),
+          adaptiveFiltering: true,
+        })
+        .toFile(outputPath);
+      break;
+
+    case ".webp":
+      await pipeline
+        .webp({
+          quality: settings.quality,
+        })
+        .toFile(outputPath);
+      break;
+
+    default:
+      await pipeline
+        .jpeg({
+          quality: settings.quality,
+          mozjpeg: true,
+        })
+        .toFile(outputPath);
+      break;
+  }
 
   const compressedSize = fs.statSync(outputPath).size;
 
@@ -72,6 +117,7 @@ async function compressImage(inputPath, compressionLevel = 50) {
     originalWidth: metadata.width,
     originalHeight: metadata.height,
     compressedWidth: targetWidth,
+    compressedHeight: metadata.height * (targetWidth / metadata.width),
     reductionPercent,
   };
 }
