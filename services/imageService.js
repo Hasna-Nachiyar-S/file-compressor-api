@@ -4,14 +4,16 @@ const path = require("path");
 
 console.log("IMAGE SERVICE BUILD 2026-06-22");
 
-function getQuality(level = 50) {
-  level = Math.max(1, Math.min(100, Number(level) || 50));
+function normalizeLevel(level = 50) {
+  return Math.max(1, Math.min(100, Number(level) || 50));
+}
 
-  return Math.round(95 - ((level - 1) * 55) / 99);
+function getJpegQuality(level) {
+  return Math.round(95 - ((level - 1) * 35) / 99);
 }
 
 async function compressImage(inputPath, compressionLevel = 50) {
-  const quality = getQuality(compressionLevel);
+  const level = normalizeLevel(compressionLevel);
 
   const metadata = await sharp(inputPath).metadata();
 
@@ -21,28 +23,38 @@ async function compressImage(inputPath, compressionLevel = 50) {
 
   let outputExtension;
 
-  if (ext === ".png") {
-    outputExtension = ".webp";
-  } else if (ext === ".webp") {
-    outputExtension = ".webp";
-  } else {
-    outputExtension = ".jpg";
+  switch (ext) {
+    case ".png":
+      outputExtension = ".png";
+      break;
+
+    case ".webp":
+      outputExtension = ".webp";
+      break;
+
+    case ".jpg":
+    case ".jpeg":
+    default:
+      outputExtension = ".jpg";
+      break;
   }
 
   const outputPath = path.join("compressed", `${Date.now()}${outputExtension}`);
 
   let targetWidth = metadata.width;
 
+  // Resize only very large images
   if (metadata.width > 2500) {
     targetWidth = 2500;
   }
 
   console.log("=================================");
-  console.log("Compression Level:", compressionLevel);
-  console.log("Quality:", quality);
-  console.log("Original Size:", originalSize);
+  console.log("Compression Level:", level);
   console.log("Format:", metadata.format);
+  console.log("Original Width:", metadata.width);
+  console.log("Original Height:", metadata.height);
   console.log("Target Width:", targetWidth);
+  console.log("Original Size:", originalSize);
   console.log("=================================");
 
   let pipeline = sharp(inputPath);
@@ -54,17 +66,36 @@ async function compressImage(inputPath, compressionLevel = 50) {
     });
   }
 
-  if (outputExtension === ".webp") {
+  /*
+   * PNG
+   * Lossless optimization only
+   */
+  if (outputExtension === ".png") {
+    await pipeline
+      .png({
+        compressionLevel: 9,
+        adaptiveFiltering: true,
+        palette: true,
+      })
+      .toFile(outputPath);
+  } else if (outputExtension === ".webp") {
+
+  /*
+   * WEBP
+   */
     await pipeline
       .webp({
-        quality,
-        effort: 6,
+        quality: Math.max(40, 100 - Math.round(level * 0.6)),
       })
       .toFile(outputPath);
   } else {
+
+  /*
+   * JPG / JPEG
+   */
     await pipeline
       .jpeg({
-        quality,
+        quality: getJpegQuality(level),
         mozjpeg: true,
       })
       .toFile(outputPath);
@@ -72,20 +103,37 @@ async function compressImage(inputPath, compressionLevel = 50) {
 
   const compressedSize = fs.statSync(outputPath).size;
 
-  const reductionPercent =
-    originalSize > 0
-      ? (((originalSize - compressedSize) / originalSize) * 100).toFixed(2)
-      : "0.00";
+  /*
+   * Never return larger files
+   */
+  if (compressedSize >= originalSize) {
+    console.log("Compressed file larger than original. Keeping original.");
 
-  console.log("Original:", originalSize);
-  console.log("Compressed:", compressedSize);
-  console.log("Reduction:", reductionPercent);
+    fs.unlinkSync(outputPath);
+
+    return {
+      outputPath: inputPath,
+      originalSize,
+      compressedSize: originalSize,
+      quality: outputExtension === ".jpg" ? getJpegQuality(level) : null,
+      width: metadata.width,
+      reductionPercent: "0.00",
+    };
+  }
+
+  const reductionPercent = (
+    ((originalSize - compressedSize) / originalSize) *
+    100
+  ).toFixed(2);
+
+  console.log("Compressed Size:", compressedSize);
+  console.log("Reduction:", reductionPercent + "%");
 
   return {
     outputPath,
     originalSize,
     compressedSize,
-    quality,
+    quality: outputExtension === ".jpg" ? getJpegQuality(level) : null,
     width: targetWidth,
     reductionPercent,
   };
