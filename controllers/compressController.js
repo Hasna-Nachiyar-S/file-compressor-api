@@ -52,7 +52,7 @@ exports.compressFromUrl = async (req, res) => {
       result = await compressDocument(localFile, normalizedLevel);
     }
 
-    if (fs.existsSync(localFile) && !usedOriginalFile) {
+    if (fs.existsSync(localFile)) {
       fs.unlinkSync(localFile);
     }
 

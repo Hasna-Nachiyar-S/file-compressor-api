@@ -1,26 +1,30 @@
-const AdmZip = require("adm-zip");
 const fs = require("fs");
+const path = require("path");
 
-async function compressDocument(inputPath, compressionLevel = 50) {
-  const zip = new AdmZip();
+const compressPdf = require("./pdfCompressor");
+const compressDocx = require("./docxCompressor");
+const compressXlsx = require("./xlsxCompressor");
+const compressCsv = require("./csvCompressor");
 
-  zip.addLocalFile(inputPath);
+async function compressDocument(inputPath, compressionLevel) {
+  const ext = path.extname(inputPath).toLowerCase();
 
-  const outputPath = "compressed/" + Date.now() + ".zip";
+  switch (ext) {
+    case ".pdf":
+      return await compressPdf(inputPath, compressionLevel);
 
-  zip.writeZip(outputPath);
+    case ".docx":
+      return await compressDocx(inputPath, compressionLevel);
 
-  return {
-    outputPath,
-    originalSize: fs.statSync(inputPath).size,
-    compressedSize: fs.statSync(outputPath).size,
-    compressionLevel,
-    reductionPercent: (
-      ((fs.statSync(inputPath).size - fs.statSync(outputPath).size) /
-        fs.statSync(inputPath).size) *
-      100
-    ).toFixed(2),
-  };
+    case ".xlsx":
+      return await compressXlsx(inputPath, compressionLevel);
+
+    case ".csv":
+      return await compressCsv(inputPath, compressionLevel);
+
+    default:
+      throw new Error("Unsupported document type");
+  }
 }
 
 module.exports = compressDocument;
