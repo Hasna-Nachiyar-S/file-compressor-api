@@ -48,6 +48,7 @@ exports.compressFromUrl = async (req, res) => {
 
     if (imageExtensions.includes(extension)) {
       result = await compressImage(localFile, normalizedLevel);
+      console.log("RESULT OUTPUT:", result.outputPath);
     } else {
       result = await compressDocument(localFile, normalizedLevel);
     }
