@@ -1,5 +1,5 @@
 console.log("NEW DOCUMENT SERVICE LOADED");
-const fs = require("fs");
+
 const path = require("path");
 
 const compressPdf = require("./pdfCompressor");
@@ -8,10 +8,9 @@ const compressXlsx = require("./xlsxCompressor");
 const compressCsv = require("./csvCompressor");
 
 async function compressDocument(inputPath, compressionLevel) {
-  const ext = path.extname(inputPath).toLowerCase();
   console.log("INPUT PATH:", inputPath);
 
-  const ext = require("path").extname(inputPath).toLowerCase();
+  const ext = path.extname(inputPath).toLowerCase();
 
   console.log("EXTENSION:", ext);
 
@@ -29,7 +28,7 @@ async function compressDocument(inputPath, compressionLevel) {
       return await compressCsv(inputPath, compressionLevel);
 
     default:
-      throw new Error("Unsupported document type");
+      throw new Error(`Unsupported document type: ${ext}`);
   }
 }
 
