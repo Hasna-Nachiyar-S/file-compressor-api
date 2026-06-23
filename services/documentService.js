@@ -1,3 +1,4 @@
+console.log("NEW DOCUMENT SERVICE LOADED");
 const fs = require("fs");
 const path = require("path");
 
@@ -8,6 +9,11 @@ const compressCsv = require("./csvCompressor");
 
 async function compressDocument(inputPath, compressionLevel) {
   const ext = path.extname(inputPath).toLowerCase();
+  console.log("INPUT PATH:", inputPath);
+
+  const ext = require("path").extname(inputPath).toLowerCase();
+
+  console.log("EXTENSION:", ext);
 
   switch (ext) {
     case ".pdf":
